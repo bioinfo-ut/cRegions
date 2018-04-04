@@ -1,15 +1,9 @@
 # -*- coding: cp1257 -*-
-#Last update: 08.03.18
-#Calculate Henikoff Weights  -> Steven Henikoff and Jorja G. Henikoff (1994) "Position-based Sequence Weights" 
+#Last update: 04.04.18
+#Calculate Henikoff Weights 
+#Steven Henikoff and Jorja G. Henikoff (1994) "Position-based Sequence Weights" 
 
 import sys, getopt
-
-def is_number(s):
-	try:
-		float(s)
-		return True
-	except ValueError:
-		return False
 		
 def writeListToFile(filename,list):
 	outputfile = open(filename, "w")
@@ -42,7 +36,6 @@ def readFastaToArray(filePath):
 				entry.append(seq)
 				list.append(entry)
 			
-			#new seq
 			seq = ""
 			name = line.split(">")[1]
 			entry = []
@@ -62,7 +55,7 @@ def calculateHenikoffWeights(sequences):
 		weights.append([sequences[i][0],0])
 
 	for column in range(0, msa_length):
-		letters = [0,0,0,0,0] #A ,C ,G , T/U ,gap
+		letters = [0,0,0,0,0] #A ,C ,G , T/U , gap
 		for i in range (0, sequences_count):
 			sequence = sequences[i][1]
 			letter = sequence[column]
@@ -86,7 +79,9 @@ def calculateHenikoffWeights(sequences):
 			letter = sequence[column]
 			letter = letter.lower()
 			if (letter == "a"):
-				weights[i][1] += weight/letters[0] # letters[0] aka "s" is the number of times the particular nucleotide appears in the position.
+				# weights[i][0] is the name of the sequence and weights[i][1] is the weight.
+				 #letters[0] aka "s" is the number of times the particular nucleotide appears in the position.
+				weights[i][1] += weight/letters[0] 
 			elif (letter == "c"):
 				weights[i][1] += weight/letters[1]
 			elif (letter == "g"):
@@ -108,7 +103,7 @@ def normalizeHenikoffWeights(weights):
 
 def usage():
 	print('heinikoff_weights.py -i <codon alignment in FASTA format>')
-	print('-i, --input \t input file, a codon alignment')
+	print('-i, --input \t a codon alignment in FASTA format')
 	print('-o, --output \t output file, default is weights.txt')
 	print('-v, --verbose \t print process steps')
 	
@@ -117,7 +112,7 @@ def main():
 		opts, args = getopt.getopt(sys.argv[1:], "h:i:o:v", ["help", "input=","output="])
 	except getopt.GetoptError as err:
 		# print help information and exit:
-		print(err)  # will print something like "option -a not recognized"
+		print(err) 
 		usage()
 		sys.exit(2)
 
@@ -128,10 +123,10 @@ def main():
 		elif opt in ("-h", "--help"):
 			usage()
 			sys.exit()
-		elif opt in ("-i", "-in", "--input"):
+		elif opt in ("-i", "--input"):
 			global input
 			input = arg
-		elif opt in ("-o", "-out", "--output"):
+		elif opt in ("-o", "--output"):
 			global output
 			output = arg
 		else:
@@ -150,10 +145,10 @@ if __name__ == '__main__':
 		print('reading sequences to memory') 
 	sequences = readFastaToArray(input)
 	if(verbose):
-		print('calculate Henikoff Weights') 
+		print('calculate weights') 
 	rawresult = calculateHenikoffWeights(sequences)
 	if(verbose):
-		print('normalize Henikoff Weights') 
+		print('normalize weights') 
 	result = normalizeHenikoffWeights(rawresult)
 		
 	if(output != None):
