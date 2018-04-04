@@ -5,16 +5,18 @@
 ### Conversion of protein sequence alignments into the corresponding codon-based DNA alignments using pal2nal.
 pal2nal author is Mikita Suyama, more information at http://www.bork.embl.de/pal2nal
 
-Usage: 
-<code> perl  pal2nal.pl  protein.aln  nucleotide.fasta [options] </code>
+Usage: <br>
+```
+perl  pal2nal.pl  protein.aln  nucleotide.fasta [options]
+```
 
-protein.aln - A protein multiple sequence alignment (in FASTA format)
-nucleotide.fasta -  Protein-coding sequences (CDS) of the respective proteins (in FASTA format). Also, either mRNA or the full genome can be used instead of CDS. The coding sequence must not contain introns.
+<b>protein.aln</b> - A protein multiple sequence alignment (in FASTA format)<br>
+<b>nucleotide.fasta</b> -  Protein-coding sequences (CDS) of the respective proteins (in FASTA format). Also, either mRNA or the full genome can be used instead of CDS. The coding sequence must not contain introns.
 
 Options:<br>
-  -output (clustal|paml|fasta|codon), default = clustal
+<b>-output (clustal|paml|fasta|codon), default = clustal</b>
 
-  -codontable (1(default)|2|3|4|5|6|9|10|11|12|13|14|15|16|21|22|23)<br>
+<b>-codontable (1(default)|2|3|4|5|6|9|10|11|12|13|14|15|16|21|22|23)</b><br>
     NCBI GenBank codon table<br>
     1  Universal code<br>
     2  Vertebrate mitochondrial code<br>
@@ -46,17 +48,19 @@ Usage: <br>
 python henikoff_weights.py -i pal2nal_output.fasta -o weights.txt
 ```
 
--i, --input - a codon alignment in FASTA format, (pal2nal output). Can also be RNA sequence
--o, --output - output file, default is weights.txt
+<b>-i, --input -</b> a codon alignment in FASTA format, (pal2nal output). Can also be RNA sequence<br>
+<b>-o, --output -</b> output file, default is weights.txt
 
 
 
 Citation: Henikoff S., Henikoff JG. 1994. Position-based sequence weights. Journal of Molecular Biology 243:574–578. DOI: 10.1016/0022-2836(94)90032-9
 
 
-##Executing cRegions scripts with an example on non-structural polyprotein of Alphaviruses
+## Executing cRegions scripts with an example on non-structural polyprotein of Alphaviruses
+```
 perl pal2nal.pl  ALPHA_FULL_MAFFT.fasta  ALPHA_FULL_genome.fasta  -output fasta -codontable 1
 python henikoff_weights.py -i pal2nal.fasta -o weights.txt
+```
 
 
 TODO
