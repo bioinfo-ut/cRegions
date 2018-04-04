@@ -1,20 +1,20 @@
-# cRegions
+# cRegions - Using scripts in command-line interface
 
-## Using cRegions scripts in command-line interface
 * Make sure you have Python (support for both 2+ and 3+), PERL and R installed
 
-### Conversion of protein sequence alignments into the corresponding codon-based DNA alignments using pal2nal (author Mikita Suyama, more information at http://www.bork.embl.de/pal2nal)
+### Conversion of protein sequence alignments into the corresponding codon-based DNA alignments using pal2nal.
+pal2nal author is Mikita Suyama, more information at http://www.bork.embl.de/pal2nal
 
 Usage: 
-perl  pal2nal.pl  protein.aln  nucleotide.fasta [options] 
+<code> perl  pal2nal.pl  protein.aln  nucleotide.fasta [options] </code>
 
 protein.aln - A protein multiple sequence alignment (in FASTA format)
 nucleotide.fasta -  Protein-coding sequences (CDS) of the respective proteins (in FASTA format). Also, either mRNA or the full genome can be used instead of CDS. The coding sequence must not contain introns.
 
-Options:
--output (clustal|paml|fasta|codon), default = clustal
+Options:<br>
+  -output (clustal|paml|fasta|codon), default = clustal
 
--codontable (1(default)|2|3|4|5|6|9|10|11|12|13|14|15|16|21|22|23)<br>
+  -codontable (1(default)|2|3|4|5|6|9|10|11|12|13|14|15|16|21|22|23)<br>
     NCBI GenBank codon table<br>
     1  Universal code<br>
     2  Vertebrate mitochondrial code<br>
@@ -35,14 +35,16 @@ Options:
     23  Thraustochytrium mitochondrial code<br>
 
 
-(More info see pal2nal.v14/README):
+  (More info see pal2nal.v14/README):
 
 
 ### Henikoff position-based weights
-Henikoff position-based sequence weights are calculated based on the codon alignment
+Henikoff position-based sequence weights are calculated based on the codon alignment.
 
-Usage: 
+Usage: <br>
+```
 python henikoff_weights.py -i pal2nal_output.fasta -o weights.txt
+```
 
 -i, --input - a codon alignment in FASTA format, (pal2nal output). Can also be RNA sequence
 -o, --output - output file, default is weights.txt
