@@ -1,9 +1,9 @@
 # cRegions
 
-##Using cRegions scripts in command-line interface
+## Using cRegions scripts in command-line interface
 * Make sure you have Python (support for both 2+ and 3+), PERL and R installed
 
-### 1) Conversion of protein sequence alignments into the corresponding codon-based DNA alignments using pal2nal (author Mikita Suyama, more information at http://www.bork.embl.de/pal2nal)
+### Conversion of protein sequence alignments into the corresponding codon-based DNA alignments using pal2nal (author Mikita Suyama, more information at http://www.bork.embl.de/pal2nal)
 
 Usage: 
 perl  pal2nal.pl  protein.aln  nucleotide.fasta [options] 
@@ -38,7 +38,7 @@ Options:
 (More info see pal2nal.v14/README):
 
 
-### 2) Henikoff position-based weights
+### Henikoff position-based weights
 Henikoff position-based sequence weights are calculated based on the codon alignment
 
 Usage: 
