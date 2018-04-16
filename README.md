@@ -1,4 +1,4 @@
-# cRegions - Using scripts in command-line interface
+# cRegions - using scripts in command-line interface
 
 * Make sure you have Python (support for both 2+ and 3+), PERL and R installed
 
@@ -51,18 +51,17 @@ python henikoff_weights.py -i pal2nal_output.fasta -o weights.txt
 <b>-i, --input -</b> a codon alignment in FASTA format, (pal2nal output). Can also be RNA sequence<br>
 <b>-o, --output -</b> output file, default is weights.txt
 
-
-
+<br>
 Citation: Henikoff S., Henikoff JG. 1994. Position-based sequence weights. Journal of Molecular Biology 243:574–578. DOI: 10.1016/0022-2836(94)90032-9
 
 
 ## Executing cRegions scripts with an example on non-structural polyprotein of Alphaviruses
 ```
-perl pal2nal.pl  ALPHA_FULL_MAFFT.fasta  ALPHA_FULL_genome.fasta  -output fasta -codontable 1
+perl pal2nal.pl  ALPHA_NON_STRUCTURAL_MAFFT.fasta  ALPHA_NON_STRUCTURAL_genome.fasta  -output fasta -codontable 1
 python henikoff_weights.py -i pal2nal.fasta -o weights.txt
 ```
 
 
 TODO
-2) msaPositionReader.py
-3) msaStatistics.R 
+2) <code>msaPositionReader.py<code><br>
+3) <code>msaStatistics.R </code>
