@@ -59,11 +59,12 @@ location = paste(folder, "/", codonUsageFile, sep="")
 con = file(location, "rt") 
 
 firstLine = readLines(con, 1) # Read one line
+arr <- strsplit(firstLine, '\t') [[1]]
+numberSeqArr <- strsplit(arr[1], ':') [[1]]
 
 
-# codonUsage.txt -> info: 	49	2073
-numberSeq  = as.numeric(sapply(strsplit(firstLine, "\t",fixed = FALSE),"[[", 2))
-aligmentSoftware = sapply(strsplit(firstLine, "\t",fixed = FALSE),"[[", 3)
+# codon_usage_bias.tsv -> number_of_seq: 49	 msa_length:2073
+numberSeq <- as.numeric(numberSeqArr[2])
 
 #Total length of MSA including gaps
 N = length(observed$pos)

@@ -580,8 +580,6 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 
 	try:
 		dataFile = open(filePath + tag +"codon_usage_bias.tsv", "w")
-		#File for final user
-		dataFileUser = open(filePath + tag +"codon_usage_over_all_sequences.tsv", "w")
 		#datafile for js script
 		dataFileScript = open(filePath + tag + "codonUsageScript.txt", "w")
 	except:
@@ -589,8 +587,8 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 		
 	dataFileScript.write("[")
 	AminoAcidsInArray = []
-	dataFile.write("info: "+ "\t" + str(len(codonAlignment)) +"\t" +  msaLength +"\t" +"\n")
-	dataFileUser.write("codon"+ "\t" + "AA" +"\t" +"\t" + "freq" +"\t" + "prop" +"\n")
+	dataFile.write("number_of_seq:"+str(len(codonAlignment)) +"\t msa_length:" + msaLength +"\t" +"\n")
+	dataFile.write("codon"+ "\t" + "AA" +"\t" +"\t" + "freq" +"\t" + "prop" +"\n")
 	for i in range(0, len(codonUsageBiasList)):
 		codon = codonUsageBiasList[i][0]
 		aminoacid = codonUsageBiasList[i][1]
@@ -603,12 +601,13 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 		dataFile.write(str(prop) + "\n")
 
 		#File for final user
+		'''
 		if (not aminoacid == "GAP"):
-			dataFileUser.write(codon + "\t")
-			dataFileUser.write(aminoacid + "\t")
-			dataFileUser.write(str(count) + "\t")
-			dataFileUser.write(str(prop) + "\n")
-
+			dataFile.write(codon + "\t")
+			dataFile.write(aminoacid + "\t")
+			dataFile.write(str(count) + "\t")
+			dataFile.write(str(prop) + "\n")
+		'''
 		arrayStr = "data: ["
 		if ((not aminoacid in AminoAcidsInArray) and aminoacid != "GAP"):
 			AminoAcidsInArray.append(aminoacid) #add new aa into array
@@ -632,7 +631,6 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 
 	dataFileScript.close()
 	dataFile.close()
-	dataFileUser.close()
 	
 def createCodonUsageFrequenceTable(filePath, codonUsageBiasList):
 
@@ -936,8 +934,8 @@ def loadWeightsToDictionary(filePath):
 	
 
 def usage():
-	print('python positionReaderTerminal.py -c <codon alignment in fasta format> -w <weights.txt> -g 1 -o /results')
-	print('-c, --codonalignmen \t a odon alignment in fasta format')
+	print('python positionReaderTerminal.py -i <codon alignment in fasta format> -w <weights.txt> -g 1 -o /results')
+	print('-i, --input \t a codon alignment in FASTA format')
 	print('-w, --weights \t (OPTIONAL) a weights file in tab separated format')
 	print('-t, --table \t (OPTIONAL) a codon table with codon usage proportions')
 	print('-g, --code \t genetic code identifier (https://www.ncbi.nlm.nih.gov/Taxonomy/Utils/wprintgc.cgi)')
@@ -946,7 +944,7 @@ def usage():
 	
 def main():
 	try:
-		opts, args = getopt.getopt(sys.argv[1:], "hp:c:w:t:g:o:v", ["help","codonalignment=","weights=","table=","code=","output=","verpose"])
+		opts, args = getopt.getopt(sys.argv[1:], "hp:i:w:t:g:o:v", ["help","input=","weights=","table=","code=","output=","verpose"])
 	except getopt.GetoptError as err:
 		# print help information and exit:
 		print(err)  # will print something like "option -a not recognized"
@@ -960,7 +958,7 @@ def main():
 		elif opt in ("-h", "--help"):
 			usage()
 			sys.exit()
-		elif opt in ("-c", "--codonalignment"):
+		elif opt in ("-i", "--input"):
 			global codonAlignmentFilePath
 			codonAlignmentFilePath = arg
 		elif opt in ("-w", "--weights"):
