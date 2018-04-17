@@ -10,8 +10,8 @@ Usage: <br>
 perl  pal2nal.pl  protein.aln  nucleotide.fasta [options]
 ```
 
-<code>protein.aln<code> - A protein multiple sequence alignment (in FASTA format)<br>
-<code>nucleotide.fasta</code> -  Protein-coding sequences (CDS) of the respective proteins (in FASTA format). Also, either mRNA or the full genome can be used instead of CDS. The coding sequence must not contain introns.
+<code>protein.aln</code> - A protein multiple sequence alignment (in FASTA format)<br>
+<code>nucleotide.fasta</code> -  Protein-coding sequences (CDS) of the respective proteins (in FASTA format). Also, either mRNA or the full genome can be used instead of CDS. The coding sequence must not contain introns. <br>
 
 Options:<br>
 <b>-output (clustal|paml|fasta|codon), default = clustal</b>
@@ -37,8 +37,10 @@ Options:<br>
     23  Thraustochytrium mitochondrial code<br>
 
   (More info see pal2nal.v14/README)<br>
+
 Output:<br>
 <code>pal2nal.fasta</code> - A single file with corresponding codon alignment.
+<br>
 <br>
 
 
@@ -60,11 +62,13 @@ Output:<br>
 <br>
 Citation: Henikoff S., Henikoff JG. 1994. Position-based sequence weights. Journal of Molecular Biology 243:574–578. DOI: 10.1016/0022-2836(94)90032-9
 <br>
+<br>
 
 
 
 ### Calculate observed and predicted nucleotide frequences or proportions for each position in the codon alignment.
-text
+
+Next step is to calculate observed frequencies for each nucleotide (A;C;G;T) in each position in the codon alignment. Also, predicted nucleotide values are calculated based on the codon usage bias of genes analysed or assuming uniform codon usage of synonymus codons.
 
 Usage: <br>
 ```
@@ -81,28 +85,50 @@ Options:<br>
 
 
 Output:<br>
-<code>observed.tsv</code> - Observed nucleotide frequencies for each position in the codon alignment.
-<code>proportion_observed.tsv</code> - Observed nucleotide proportions for each position in the codon alignment.
-<code>predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes.
-<code>weighted_predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes. Results are weighted using values in the weights.txt file.
-<code>predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage.
-<code>weighted_predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage. Results are weighted using values in the weights.txt file.
-<code>codon_usage_table.txt</code> - Codon usage bias in a table format, can be used as an input in msaPositionReader.py script ot the cRegions webpage.
-<code>codon_usage_bias.tsv</code> -  Codon usage bias tsv file. Information about the number of sequences and the length of the MSA is provided from which the codon usage was calculated.
-<code>codonUsageScript.txt</code> - A file used as an input for highcharts plots.
+<code>observed.tsv</code> - Observed nucleotide frequencies for each position in the codon alignment.<br>
+<code>proportion_observed.tsv</code> - Observed nucleotide proportions for each position in the codon alignment.<br>
+<code>predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes.<br>
+<code>weighted_predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes. Results are weighted using values in the weights.txt file.<br>
+<code>predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage.<br>
+<code>weighted_predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage. Results are weighted using values in the weights.txt file.<br>
+<code>codon_usage_table.txt</code> - Codon usage bias in a table format, can be used as an input in msaPositionReader.py script ot the cRegions webpage.<br>
+<code>codon_usage_bias.tsv</code> -  Codon usage bias tsv file. Information about the number of sequences and the length of the MSA is provided from which the codon usage was calculated.<br>
+<code>codonUsageScript.txt</code> - A file used as an input for highcharts plots.<br>
+<br>
 <br>
 
 
+### Calculate three different metrics (p-value of chisq test, RMSD and MAXDIF) based on observed and predicted values
 
+
+
+Usage: <br>
+```
+Rscript msaStatistics.R [mode] [allowed gap] [skip gap] [window size] [codon position] [input/output dir] observed.tsv proportion_observed.tsv weighted_predicted_uniform.tsv weighted_predicted.tsv codon_usage_bias.tsv
+```
+Options:<br>
+<b>mode - </b> 1 - Single positions; 2 - sliding window mode; 3 both (web tool uses mode 3)<br>
+<b>allowed gap - </b> how many gaps (percentage) are allowed in a single column in the codon alignment, default 20 <br>
+<b>skip gap - </b> when a position in the sliding window mode in the codon aligment has more than 'skip gap' (percentage), then this position is excluded from the window and the next one is included , default 90 ( applicable when window size > 1 ) <br>
+<b>window size - </b> windows size in the sliding window mode, default 1<br>
+<b>codon position - </b> position in three-nucleotide codon which is used in the arithmetic mean calculation, default 3<br>
+<b>input/output dir - </b> input files (observed.tsv, predicted.tsv etc. ) must be located at this directory and also results are written into this directory <br>
+<code>weighted_predicted_uniform.tsv</code> - predicted_uniform.tsv can be also used instead of weighted_predicted_uniform.tsv<br>
+<code>weighted_predicted.tsv</code> - predicted.tsv can be also used instead of weighted_predicted.tsv <br>
+
+
+Output:<br>
+<code>raw_values.tsv</code> - Metric values (RMSD and MAXDIF) and p-value for Chi-Square Goodness of Fit Test for each position in the codon alignment (also for uniform codon usage). NA means that metric could not be calculated (e.g., more gaps than allowed, less than two nucleotides in one position). <br>
+<code>raw_values_sliding_window.tsv</code> - Metric values (RMSD and MAXDIF) and p-value for Chi-Square Goodness of Fit Test for each position in the codon alignment in the sliding window mode. <br>
+
+* msaStatistics.R generates multiple other files for webtool.
+
+<br>
+<br>
 ## Executing cRegions scripts with an example on non-structural polyprotein of Alphaviruses
 ```
 perl pal2nal.pl  ALPHA_NON_STRUCTURAL_MAFFT.fasta  ALPHA_NON_STRUCTURAL_genome.fasta  -output fasta -codontable 1
 python henikoff_weights.py -i pal2nal.fasta -o weights.txt
+python msaPositionReader.py -i pal2nal.fasta -g 1 -w weights.txt -o /results
+Rscript msaStatistics.R 3 20 90 1 3 /results observed.tsv proportion_observed.tsv weighted_predicted_uniform.tsv weighted_predicted.tsv codon_usage_bias.tsv
 ```
-
-
-TODO
-2) <code>msaPositionReader.py<code><br>
-
-
-3) <code>msaStatistics.R </code>

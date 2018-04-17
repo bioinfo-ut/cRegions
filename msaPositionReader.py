@@ -3,6 +3,7 @@
 #input:
 	#2) a codon alignment
 	#3) optional: weights file and codon table
+
 #output
 	#codon_usage_bias.tsv
 	#observed.tsv
@@ -13,50 +14,11 @@
 	#weighted_predicted_uniform.tsv
 	
 
-'''
-codon_usage_bias.tsv
-info: 	[number of sequences]	[alignment length]
-ttt	PHE	0.4101
-ttc	PHE	0.5899
-tta	LEU	0.1001
-
-observed.tsv
-pos	A	C	G	T	gap	totalACGT
-1	49	0	0	0	0	49
-2	0	0	0	49	0	49
-3	0	0	49	0	0	49
-4	0	0	49	0	0	49
-5	3	25	21	0	0	49
-
-proportion_observed.tsv
-pos	 A 	 C 	 G 	 T	gap
-1	1.0	0.0	0.0	0.0	0.0
-2	0.0	0.0	0.0	1.0	0.0
-3	0.0	0.0	1.0	0.0	0.0
-
-predicted_uniform.tsv
-pos	 A 	 C 	 G 	 T
-6	0.25	0.25	0.25	0.25
-7	0.2667	0.0	0.6	0.1333
-8	0.6	0.3333	0.0667	0.0
-
-predicted.tsv
-pos	 A 	 C 	 G 	 T
-11	0.7143	0.2365	0.0492	0.0
-12	0.4243	0.0777	0.4301	0.0679
-13	0.0	0.0	1.0	0.0
-
-'''
-
-
 import sys,getopt
 import os
 import re
 import collections
 import copy
-
-#TODO use dictionary dict = {'ttt': ['PHE','F',0]} etc.
-#The Standard Code (transl_table=1) 
 
 CODON_TABLE_1={'ttt':['PHE','F',0.5],'ttc':['PHE','F',0.5],'tta':['LEU','L',(1.0/6)],'ttg':['LEU','L',(1.0/6)],
 				 'tct':['SER_TCN','S',(1.0/4)],'tcc':['SER_TCN','S',(1.0/4)],'tca':['SER_TCN','S',(1.0/4)],'tcg':['SER_TCN','S',(1.0/4)],
@@ -428,7 +390,9 @@ def readFileToArray(filePath):
 def fileOpenAndGetSeq(filePath):
 	
 	seq = ""
+	name = ""
 	listSeq = []
+	entry = []
 	
 	
 	try:
@@ -436,7 +400,6 @@ def fileOpenAndGetSeq(filePath):
 	except:
 		print ("ERROR - Reading " + str(filePath))
 		
-	entry = []
 	while True :
 		line = file.readline()
 
@@ -460,14 +423,12 @@ def fileOpenAndGetSeq(filePath):
 				entry = []
 				entry.append(name)
 				
-				seq = seq.lower();
+				seq = seq.lower()
 				seq = seq.replace('u','t')
-				
+			
 				entry.append(seq)
 				listSeq.append(entry)
-				#empty seq
-				seq = ""
-				#new name
+				seq = "" #clear seq
 				name = line.split(">")[1]
 			else:
 				name = line.split(">")[1]
@@ -498,7 +459,7 @@ def fillCodonCounts(codonAlignment,codonCounts):
 		for i in range(0,seqLength):
 			nucleotide_removeCR = (sequence[i]).split(chr(13))[0]
 			nucleotide = nucleotide_removeCR.split(chr(10))[0]
-			nucleotide = nucleotide.lower();
+			nucleotide = nucleotide.lower()
 			nucleotide = nucleotide.replace('u','t')
 			codon = codon + nucleotide
 			if (len(codon) == 3):
@@ -580,7 +541,6 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 
 	try:
 		dataFile = open(filePath + tag +"codon_usage_bias.tsv", "w")
-		#datafile for js script
 		dataFileScript = open(filePath + tag + "codonUsageScript.txt", "w")
 	except:
 		print ("ERROR - Creating " + str(filePath))
@@ -600,14 +560,6 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 		dataFile.write(str(count) + "\t")
 		dataFile.write(str(prop) + "\n")
 
-		#File for final user
-		'''
-		if (not aminoacid == "GAP"):
-			dataFile.write(codon + "\t")
-			dataFile.write(aminoacid + "\t")
-			dataFile.write(str(count) + "\t")
-			dataFile.write(str(prop) + "\n")
-		'''
 		arrayStr = "data: ["
 		if ((not aminoacid in AminoAcidsInArray) and aminoacid != "GAP"):
 			AminoAcidsInArray.append(aminoacid) #add new aa into array
@@ -757,14 +709,9 @@ def createAminoAcidDict(codonUsageBias):
 
 
 def calculatePredictedValues(codonAlignment,codonUsageBias,aaDictionary,weights):
-
-	#print (aaDictionary) #   'MET': {0: {'a': 1.0, 'c': 0.0, 't': 0.0, 'g': 0.0}, 1: {'a': 0.0, 'c': 0.0, 't': 1.0, 'g': 0.0}, 2: {'a': 0.0, 'c': 0.0, 't': 0.0, 'g': 1.0}}
-	#print(codonUsageBias)  'ctt': ['LEU', 'L', 0.16666666666666666], 'atg': ['MET', 'M', 1.0], 'aca': ['THR', ....
-	#print(codonAlignment) ['HPV65REF', 'atggcagat---------aaag....]
 	
 	result = {} #  a:0.023,c:0.2...
 	msaLength = len(codonAlignment[0][1]) #Length of one sequence
-	totalSeq = len(codonAlignment)
 
 	for i in range(0,msaLength,3):
 		result[i] = {'a':0.0,'c':0.0,'g':0.0,'t':0.0}
@@ -840,7 +787,6 @@ def createDataFile(filePath, predicted):
 	counter = 1
 	for position, value in arr:
 		dataFile.write(str(position+1))
-		sum = str(value['a']+value['c']+value['g']+value['t'])
 		dataFile.write("\t" + str(value['a']) + "\t" + str(value['c']) + "\t" + str(value['g']) + "\t" + str(value['t']))
 		if (counter != len(predicted) ):
 			dataFile.write("\n")
@@ -946,7 +892,6 @@ def main():
 	try:
 		opts, args = getopt.getopt(sys.argv[1:], "hp:i:w:t:g:o:v", ["help","input=","weights=","table=","code=","output=","verpose"])
 	except getopt.GetoptError as err:
-		# print help information and exit:
 		print(err)  # will print something like "option -a not recognized"
 		usage()
 		sys.exit(2)

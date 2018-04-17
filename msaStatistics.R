@@ -1,5 +1,5 @@
 # Created by Mikk Puustusmaa
-# Last edit on 25.07.2017
+# Last edit on 17.04.2018
 
 #------------------------------SETTINGS-------------------------------------
 #mode = 1 # Single positions
@@ -19,10 +19,10 @@ skipGap = as.double(as.double(args[3])/100)
 
 #-----sliding window mode-----
 
-#window size - How many values in arithmetic mean calculation
+#window size - How many values are included in the sliding window
 windowSize = as.numeric(args[4])
 
-# Position in three-nucleotide codon which is used in arithmetic mean calculation. 
+# Position in three-nucleotide codon which is used in the arithmetic mean calculation. 
 # E.g. if codonPosition = 3 and window size = 3, then arithmetic mean is calculated over 3,6,9 etc.
 codonPosition = as.numeric(args[5])
 
@@ -307,22 +307,28 @@ if(currentMode == 2 || currentMode == 3){
 
 calculateRMSD <- function(observed,predicted){
 
-	difA = (observed[1] - predicted[1])^2
-	difC = (observed[2] - predicted[2])^2
-	difG = (observed[3] - predicted[3])^2
-	difT = (observed[4] - predicted[4])^2
-	val = sqrt((difA + difC + difG + difT)/4)
+	val = NA
+	dif = 0
+	predictedLength <- length(predicted)
+	for(i in 1:predictedLength) {
+		dif = dif + (observed[i] - predicted[i])^2
+	}
+	print (dif)
+	val = sqrt(dif/predictedLength)
 	return (val);
 	
 }
 
 calculateMAXDIF <- function(observed,predicted){
 
-	difA = abs(observed[1] - predicted[1])
-	difC = abs(observed[2] - predicted[2])
-	difG = abs(observed[3] - predicted[3])
-	difT = abs(observed[4] - predicted[4])
-	v = c(difA, difC, difG, difT)
+	val = NA
+	v = c()
+	predictedLength <- length(predicted)
+	for(i in 1:predictedLength) {
+		dif = abs(observed[i] - predicted[i])
+		v = c(v,dif)
+	}
+
 	val = max(v)
 	return (val);
 	
@@ -383,7 +389,13 @@ for(metric in metrics){
 
 
 			if (metric == "RMSD" || metric == "UNIFORM_RMSD") {
+				if (i == 5){
+					print (x);
+					print(p);
+					
+				}
 				val = calculateRMSD(x,p)
+				print ("-----------------------")
 			} else if (metric == "MAXDIF" || metric == "UNIFORM_MAXDIF"){
 				val = calculateMAXDIF(x,p)
 			}
