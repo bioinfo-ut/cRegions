@@ -1,5 +1,8 @@
-# cRegions - using scripts in command-line interface
+# cRegions
+cRegions is built for detecting embedded cis-acting elements from diverged protein-coding sequences. cRegions web tool is available at http://bioinfo.ut.ee/cRegions/
 
+
+## Using scripts in command-line interface
 * Make sure you have Python (support for both 2+ and 3+), PERL and R installed
 
 ### Convert protein multiple sequence alignment into corresponding codon-based nucleotide alignment using pal2nal.
@@ -131,7 +134,7 @@ Output:<br>
 <br>
 <br>
 
-### Executing cRegions scripts on the non-structural polyprotein of Alphaviruses as an example
+### Example: Executing cRegions scripts on the non-structural polyprotein of Alphaviruses
 
 ```
 perl pal2nal.pl  ALPHA_NON_STRUCTURAL_MAFFT.fasta  ALPHA_NON_STRUCTURAL_genome.fasta  -output fasta -codontable 1
