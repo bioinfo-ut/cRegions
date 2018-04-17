@@ -91,12 +91,12 @@ Options:<br>
 Output:<br>
 <code>observed.tsv</code> - Observed nucleotide frequencies for each position in the codon alignment.<br>
 <code>proportion_observed.tsv</code> - Observed nucleotide proportions for each position in the codon alignment.<br>
-<code>predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes.<br>
-<code>weighted_predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes. Results are weighted using values in the weights.txt file.<br>
+<code>predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment.<br>
+<code>weighted_predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment. Results are weighted using values in the weights.txt file.<br>
 <code>predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage.<br>
 <code>weighted_predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage. Results are weighted using values in the weights.txt file.<br>
-<code>codon_usage_table.txt</code> - Codon usage bias in a table format, can be used as an input in msaPositionReader.py script ot the cRegions webpage.<br>
-<code>codon_usage_bias.tsv</code> -  Codon usage bias tsv file. Information about the number of sequences and the length of the MSA is provided from which the codon usage was calculated.<br>
+<code>codon_usage_table.txt</code> - Codon usage table, can be used as an input in the msaPositionReader.py script or in the cRegions webpage.<br>
+<code>codon_usage_bias.tsv</code> -  Codon usage bias tsv file. Additional information about the number of sequences and the length of the MSA is provided from which the codon usage was calculated.<br>
 <code>codonUsageScript.txt</code> - A file used as an input for highcharts plots.<br>
 <br>
 <br>
