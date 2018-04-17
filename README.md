@@ -63,7 +63,7 @@ Citation: Henikoff S., Henikoff JG. 1994. Position-based sequence weights. Journ
 
 
 
-### Calculate observed  frequences and predicted proportions for each nucleotide.
+### Calculate observed and predicted nucleotide frequences or proportions for each position in the codon alignment.
 text
 
 Usage: <br>
@@ -81,17 +81,15 @@ Options:<br>
 
 
 Output:<br>
-<code>weighted_predicted.tsv</code> - 
-<code>weighted_predicted_uniform.tsv</code> - 
-<code>predicted.tsv</code> - 
-<code>predicted_uniform.tsv</code> - 
-<code>observed.tsv</code> - 
-<code>proportion_observed.tsv</code> - 
-<code>codonUsageScript.txt</code> - 
-<code>codon_usage_table.txt</code> - 
-<code>codon_usage_bias.tsv</code> - 
-<code>codon_usage_over_all_sequences.tsv</code> - 
-<code>codon_usage_over_all_sequences.tsv</code> - 
+<code>observed.tsv</code> - Observed nucleotide frequencies for each position in the codon alignment.
+<code>proportion_observed.tsv</code> - Observed nucleotide proportions for each position in the codon alignment.
+<code>predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes.
+<code>weighted_predicted.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment using codon usage bias of these genes. Results are weighted using values in the weights.txt file.
+<code>predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage.
+<code>weighted_predicted_uniform.tsv</code> - Predicted nucleotide proportions for each position in the codon alignment assuming uniform codon usage. Results are weighted using values in the weights.txt file.
+<code>codon_usage_table.txt</code> - Codon usage bias in a table format, can be used as an input in msaPositionReader.py script ot the cRegions webpage.
+<code>codon_usage_bias.tsv</code> -  Codon usage bias tsv file. Information about the number of sequences and the length of the MSA is provided from which the codon usage was calculated.
+<code>codonUsageScript.txt</code> - A file used as an input for highcharts plots.
 <br>
 
 
