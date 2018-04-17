@@ -35,10 +35,6 @@ predictedFile = toString(args[10]) #weighted or normal
 codonUsageFile = toString(args[11])
 
 
-#zeroProbabilityCorrection = FALSE
-#if(args[12] == 1){zeroProbabilityCorrection = TRUE}
-#zeroProbabilityCorrection = TRUE
-
 #------------------------------SETTINGS END--------------------------------
 location = paste(folder, "/", observedDataFile, sep="")
 observedCount = read.table(location,sep="\t",dec=".",header=T)
@@ -163,8 +159,6 @@ createPlot <- function(values,pos1,pos2,pos3, title, currentMode){
 
 
 		location = paste(folder,"/",title, sep="")
-		
-
 		jsArray1 = paste(jsArray1, "]", sep="")
 		fileConn<-file(paste(location,"_pos1.txt",sep=""))
 		writeLines(jsArray1, fileConn)
