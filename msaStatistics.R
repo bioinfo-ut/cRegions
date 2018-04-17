@@ -389,13 +389,7 @@ for(metric in metrics){
 
 
 			if (metric == "RMSD" || metric == "UNIFORM_RMSD") {
-				if (i == 5){
-					print (x);
-					print(p);
-					
-				}
 				val = calculateRMSD(x,p)
-				print ("-----------------------")
 			} else if (metric == "MAXDIF" || metric == "UNIFORM_MAXDIF"){
 				val = calculateMAXDIF(x,p)
 			}

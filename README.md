@@ -60,6 +60,7 @@ Options:<br>
 Output:<br>
 <code>weights.txt</code> - A single file with weights for each sequence.
 <br>
+<br>
 Citation: Henikoff S., Henikoff JG. 1994. Position-based sequence weights. Journal of Molecular Biology 243:574–578. DOI: 10.1016/0022-2836(94)90032-9
 <br>
 <br>
@@ -98,8 +99,12 @@ Output:<br>
 <br>
 
 
-### Calculate three different metrics (p-value of chisq test, RMSD and MAXDIF) based on observed and predicted values
+### Calculate three different metrics based on observed and predicted values
 
+cRegions algorithm uses three different metrics to compare observed and predicted values.<br>
+1)  Chi-Square Goodness of Fit Test (chisq.test) for each column in the codon alignment. This test tries to fit a statistical model (predicted nucleotide proportions) to the observed data, estimating how “close” observed values are to expected values. Bonferroni correction is used to show the threshold with significance level p = 0.05. We used Bonferroni correction as it is most strict to avoid false positive hits.
+2) Root-mean-square deviation (RMSD). <br>
+3) Maximum difference (MAXDIF), which selects only a single nucleotide for each column that has the highest absolute difference between predicted and observed values. <br><br>
 
 
 Usage: <br>
@@ -125,7 +130,9 @@ Output:<br>
 
 <br>
 <br>
-## Executing cRegions scripts with an example on non-structural polyprotein of Alphaviruses
+
+### Executing cRegions scripts on the non-structural polyprotein of Alphaviruses as an example
+
 ```
 perl pal2nal.pl  ALPHA_NON_STRUCTURAL_MAFFT.fasta  ALPHA_NON_STRUCTURAL_genome.fasta  -output fasta -codontable 1
 python henikoff_weights.py -i pal2nal.fasta -o weights.txt
