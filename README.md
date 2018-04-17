@@ -1,9 +1,9 @@
 # cRegions
-cRegions is built for detecting embedded cis-acting elements from diverged protein-coding sequences. cRegions web tool is available at http://bioinfo.ut.ee/cRegions/
+cRegions is built for detecting embedded cis-acting elements from diverged protein-coding sequences. cRegions web tool is available at http://bioinfo.ut.ee/cRegions/<br>
 
 
 ## Using scripts in command-line interface
-* Make sure you have Python (support for both 2+ and 3+), PERL and R installed
+* Make sure you have Python (support for both 2+ and 3+), PERL and R installed<br>
 
 ### Convert protein multiple sequence alignment into corresponding codon-based nucleotide alignment using pal2nal.
 pal2nal author is Mikita Suyama, more information at http://www.bork.embl.de/pal2nal
