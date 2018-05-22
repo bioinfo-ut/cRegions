@@ -139,5 +139,5 @@ Output:<br>
 perl pal2nal.pl  ALPHA_NON_STRUCTURAL_MAFFT.fasta  ALPHA_NON_STRUCTURAL_genome.fasta  -output fasta -codontable 1
 python henikoff_weights.py -i pal2nal.fasta -o weights.txt
 python msaPositionReader.py -i pal2nal.fasta -g 1 -w weights.txt -o /results
-Rscript msaStatistics.R 3 20 90 1 3 /results observed.tsv proportion_observed.tsv weighted_predicted_uniform.tsv weighted_predicted.tsv codon_usage_bias.tsv
+Rscript msaStatistics.R 20 90 1 3 /results observed.tsv proportion_observed.tsv weighted_predicted_uniform.tsv weighted_predicted.tsv codon_usage_bias.tsv
 ```

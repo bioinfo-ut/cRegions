@@ -4,6 +4,15 @@
 #Steven Henikoff and Jorja G. Henikoff (1994) "Position-based Sequence Weights" 
 
 import sys, getopt
+
+def getDictItems(dictionary):
+	#If python 2
+	if sys.version_info[0] < 3:
+		arr = dictionary.iteritems()
+	else:
+		arr = dictionary.items()
+
+	return arr
 		
 def writeListToFile(filename,list):
 	outputfile = open(filename, "w")
@@ -45,8 +54,43 @@ def readFastaToArray(filePath):
 		
 	file.close()
 	return list
-	
+
+#Weights based on codons
 def calculateHenikoffWeights(sequences):
+	weights = []
+	sequences_count = len(sequences) 
+	msa_length = len(sequences[0][1]) #length of the first sequence in a MSA
+	for i in range (0, sequences_count):
+		weights.append([sequences[i][0],0])
+
+	for column in range(0, msa_length, 3):
+		codons = {}
+		for i in range (0, sequences_count):
+			if (not len(sequences[i][1]) == msa_length):
+				print("ERROR - Sequences are with different length")
+				sys.exit()
+
+			sequence = sequences[i][1]
+			codon = sequence[column]+sequence[column+1]+sequence[column+2]
+			codon = codon.lower()
+			if (codons.get(codon) is not None):
+				codons[codon] +=1
+			else:
+				codons[codon] = 1
+
+		for i in range (0, sequences_count):
+			sequence = sequences[i][1]
+			codon = sequence[column]+sequence[column+1]+sequence[column+2]
+			codon = codon.lower()
+			r = len(codons) #r is the number of different residues in the position a
+			s = codons.get(codon) #s is the number of times the particular residue appears in the position.
+			weight = 1/(r*s)
+			weights[i][1] += weight
+	
+	return weights
+		
+# Weights based on single nucleotide	
+def calculateHenikoffWeightsSingleNucleotide(sequences):
 
 	weights = []
 	sequences_count = len(sequences) 
@@ -55,41 +99,27 @@ def calculateHenikoffWeights(sequences):
 		weights.append([sequences[i][0],0])
 
 	for column in range(0, msa_length):
-		letters = [0,0,0,0,0] #A ,C ,G , T/U , gap
+		nucleotides = {}
 		for i in range (0, sequences_count):
+			if (not len(sequences[i][1]) == msa_length):
+				print("ERROR - Sequences are with different length")
+				sys.exit()
 			sequence = sequences[i][1]
-			letter = sequence[column]
-			letter = letter.lower()
-			if (letter == "a"):
-				letters[0] += 1
-			elif (letter == "c"):
-				letters[1] += 1
-			elif (letter == "g"):
-				letters[2] += 1
-			elif (letter == "t" or letter == "u"):
-				letters[3] += 1
-			elif (letter == "-"):
-				letters[4] += 1
-
-		r = sum(1 for x in letters if x > 0) # "r" is the number of different nucleotides
-		weight = 1.0/r 
+			nucleotide = sequence[column]
+			nucleotide = nucleotide.lower()
+			if (nucleotides.get(nucleotide) is not None):
+				nucleotides[nucleotide] +=1
+			else:
+				nucleotides[nucleotide] = 1
 		
 		for i in range (0, sequences_count):
 			sequence = sequences[i][1]
-			letter = sequence[column]
-			letter = letter.lower()
-			if (letter == "a"):
-				# weights[i][0] is the name of the sequence and weights[i][1] is the weight.
-				 #letters[0] aka "s" is the number of times the particular nucleotide appears in the position.
-				weights[i][1] += weight/letters[0] 
-			elif (letter == "c"):
-				weights[i][1] += weight/letters[1]
-			elif (letter == "g"):
-				weights[i][1] += weight/letters[2]
-			elif (letter == "t" or letter == "u"):
-				weights[i][1] += weight/letters[3]
-			elif (letter == "-"):
-				weights[i][1] += weight/letters[4]
+			nucleotide = sequence[column]
+			nucleotide = nucleotide.lower()
+			r = len(nucleotides) #r is the number of different residues in the position a
+			s = nucleotides.get(nucleotide) #s is the number of times the particular residue appears in the position.
+			weight = 1/(r*s)
+			weights[i][1] += weight
 	return weights
 
 def normalizeHenikoffWeights(weights):
@@ -141,24 +171,29 @@ if __name__ == '__main__':
 	verbose = False #A verbose mode is an option available - provides additional details as to what the computer is doing
 	
 	main()
-	if(verbose):
-		print('reading sequences to memory') 
-	sequences = readFastaToArray(input)
-	if(verbose):
-		print('calculate weights') 
-	rawresult = calculateHenikoffWeights(sequences)
-	if(verbose):
-		print('normalize weights') 
-	result = normalizeHenikoffWeights(rawresult)
+	if (input):
+		if(verbose):
+			print('reading sequences to memory') 
 		
-	if(output != None):
-		writeListToFile(output,result)
+		sequences = readFastaToArray(input)
+		if(verbose):
+			print('calculate weights') 
+		rawResult = calculateHenikoffWeights(sequences)
+		if(verbose):
+			print('normalize weights') 
+		result = normalizeHenikoffWeights(rawResult)
+			
+		if(output != None):
+			writeListToFile(output,result)
+		else:
+			for i in range (0, len(result)):
+				print(result[i][0] + "\t" + str(result[i][1]))
+		
+		if(verbose):
+			print('completed') 
+
 	else:
-		for i in range (0, len(result)):
-			print(result[i][0] + "\t" + str(result[i][1]))
-	
-	if(verbose):
-		print('completed') 
+		print("ERROR - No input. See --help for more details")
 
 
 	
