@@ -2,37 +2,32 @@
 # Last edit on 17.04.2018
 
 #------------------------------SETTINGS-------------------------------------
-#mode = 1 # Single positions
-#mode = 2 # sliding window mode
-#mode = 3 # both (web tool uses mode 3)
 args <- commandArgs(TRUE)
-mode = as.numeric(args[1])
-
 
 #A metric is not calculated for a column in MSA which has more gaps than allowed
-allowedGap = as.double(as.double(args[2])/100)
+allowedGap = as.double(as.double(args[1])/100)
 
 #In sliding window mode a column in MSA is skipped during arithmetic mean calculation instead of terminating if there is more gaps than skipGap allows.
 #TODO set limit for skipping
-skipGap = as.double(as.double(args[3])/100)
+skipGap = as.double(as.double(args[2])/100)
 
 
 #-----sliding window mode-----
 
 #window size - How many values are included in the sliding window
-windowSize = as.numeric(args[4])
+windowSize = as.numeric(args[3])
 
 # Position in three-nucleotide codon which is used in the arithmetic mean calculation. 
 # E.g. if codonPosition = 3 and window size = 3, then arithmetic mean is calculated over 3,6,9 etc.
-codonPosition = as.numeric(args[5])
+codonPosition = as.numeric(args[4])
 
 #location of data
-folder = args[6]
-observedDataFile = toString(args[7]) #count data
-observedProportionDataFile = toString(args[8]) #observed nucleotide proportions 
-predictedUniformFile = toString(args[9]) #weighted or normal
-predictedFile = toString(args[10]) #weighted or normal
-codonUsageFile = toString(args[11])
+folder = args[5]
+observedDataFile = toString(args[6]) #count data
+observedProportionDataFile = toString(args[7]) #observed nucleotide proportions 
+predictedUniformFile = toString(args[8]) #weighted or normal
+predictedFile = toString(args[9]) #weighted or normal
+codonUsageFile = toString(args[10])
 
 
 #------------------------------SETTINGS END--------------------------------
@@ -63,25 +58,22 @@ numberSeqArr <- strsplit(arr[1], ':') [[1]]
 numberSeq <- as.numeric(numberSeqArr[2])
 
 #Total length of MSA including gaps
-N = length(observed$pos)
+codonAlignmentLength = length(observed$pos)
 
 
 colorPos1 = "blue"
 colorPos2 = "green"
 colorPos3 = "red"
 
-#Array for large table
-rStatistics=seq(1, N, by=1)
-
-#Array for large table
-rStatistics_sliding_window=seq(1, N, by=1)
+rStatistics=seq(1, codonAlignmentLength, by=1)
+rStatistics_sliding_window=seq(1, codonAlignmentLength, by=1)
 
 
-createPlotChisq <- function(values, title){
-  fileName = paste(folder,"/",title,".txt", sep="")
+createChartDataChisq <- function(values, title){
+  resultFile = paste(folder,"/",title,".txt", sep="")
   location = paste(folder,"/",title, sep="")
   
-  write.table(values,file = fileName, row.names = FALSE, col.names = FALSE, sep="\t")
+  write.table(values,file = resultFile, row.names = FALSE, col.names = FALSE, sep="\t")
   jsArray = "["
   for (i in 1:length(values) ) {
     pvalue = values[i]
@@ -89,212 +81,160 @@ createPlotChisq <- function(values, title){
 	val = (-1)*log10(pvalue)
 	if(!is.na(val) && val == "Inf"){val = 1e-300}
 	
-	
-	
-	
     if (!is.na(val)  && !is.null(val)){
       val = as.double(val)
       val = round(val, digits = 3)
       jsArray = paste(jsArray, paste("[",i,",",val,"], ", sep=""), sep="")
     }
   }
+  
   jsArray = paste(jsArray, "]", sep="")
-  fileConn<-file(paste(location,"_avg.txt", sep=""))
+  fileConn<-file(paste(location,"_sliding_window_chart.txt", sep=""))
   writeLines(jsArray, fileConn)
   close(fileConn)
   
   values <- sapply(values, as.numeric)
-  rStatistics_sliding_window <<- cbind(rStatistics_sliding_window,values) # also in createPlot
+  rStatistics_sliding_window <<- cbind(rStatistics_sliding_window,values) 
 }
 
-createPlot <- function(values,pos1,pos2,pos3, title, currentMode){
-
-	if(currentMode == 1 || currentMode == 3){
-		#File location
-		fileName = paste(folder,"/",title,".txt", sep="")
-		
-		#Write table to file
-		write.table(values,file = fileName, row.names = FALSE, col.names = FALSE, sep="\t")	
-
-		values <- sapply(values, as.numeric)
-		if (is.null(rStatistics)){
-			rStatistics<<-values
-		}
-		else{
-			rStatistics <<- cbind(rStatistics,values)
-		}
-		#-----------------------
-		#For highcharts
-		#----------------------
-		jsArray1 = "["
-		jsArray2 = "["
-		jsArray3 = "["
-		
-		for (i in 1:N ) {
-		  if (title=="CHISQ" || title=="UNIFORM_CHISQ") {
-				
-				pvalue = values[i]
-				if(!is.na(pvalue) && pvalue == 0){pvalue = 1e-50}
-				val = (-1)*log10(pvalue)
-				if(!is.na(val) && val == "Inf"){val = 1e-300}
-		  }else {
-				val = values[i]
-		  }
-		  
-			if (!is.na(val) && !is.null(val)){
-			  val = as.double(val)
-				val = round(val, digits = 3)
-				if( i%%3 ==1 ){
-					jsArray1 = paste(jsArray1, paste("[",i,",", val,"], ", sep=""), sep="")
-				}
-				else if( i%%3 == 2 ){
-					jsArray2 = paste(jsArray2, paste("[",i,",", val,"], ", sep=""), sep="")
-				}
-				else{
-					jsArray3 = paste(jsArray3, paste("[",i,",", val,"], ", sep=""), sep="")
-				}
-			}
-			
-		}
-
-
-		location = paste(folder,"/",title, sep="")
-		jsArray1 = paste(jsArray1, "]", sep="")
-		fileConn<-file(paste(location,"_pos1.txt",sep=""))
-		writeLines(jsArray1, fileConn)
-		close(fileConn)
-
-		jsArray2 = paste(jsArray2, "]", sep="")
-		fileConn<-file(paste(location,"_pos2.txt",sep=""))
-		writeLines(jsArray2, fileConn)
-		close(fileConn)
-
-		jsArray3 = paste(jsArray3, "]", sep="")
-		fileConn<-file(paste(location,"_pos3.txt",sep=""))
-		writeLines(jsArray3, fileConn)
-		close(fileConn)
-
-		#-----------------------
-		#For highcharts
-		#----------------------
-
-	}
-
-if(currentMode == 2 || currentMode == 3){
-		addedValues = rep(NA,N)
-		yMax = 0
-
-
-		#-----------------------
-		#For highcharts
-		#----------------------
-		
-		jsArray = "["
-		for(i in seq(codonPosition, (length(values)-3*windowSize), by = 3)){
-			sum = 0
-			#If in some positions in MSA, there is insertion that is caused only by one or few sequences, 
-			#it is not good to terminate arithmetic mean calculation, rather skip that position
-			counter_PositionsInSum = 0
-			currentPosition = i
-			
-
-			#If there is a position (column) in MSA, where is more gaps than allowed,
-			#then this positioni is set to NA and if there is NA in sliding window
-			#value for this window is not calculated
-			NAinWindow = FALSE
-			
-		
-			val = values[currentPosition]
-			repeat{
-				if (is.na(val)){
-					if (counter_PositionsInSum == 0){
-						#first position
-						NAinWindow = TRUE
-						break
-					}
-					else if(observed[currentPosition,6] < skipGap){
-						NAinWindow = TRUE
-						break
-						
-					}
-				}else{
-				  val = as.double(val)
-					sum = sum + val
-					counter_PositionsInSum = counter_PositionsInSum + 1
-					
-				}
-				
-				currentPosition = currentPosition + 3
-
-				
-  				if(counter_PositionsInSum == windowSize){
-    					break
-  				}else if (currentPosition >= length(values)-3){
-						NAinWindow = TRUE
-						break
-					
-				}
-
-
-			}#Repeat END
-	
-			if(!NAinWindow){
-				addedValues[i] = (sum / windowSize)
-				value = round((sum / windowSize), digits = 3)
-				jsArray = paste(jsArray, paste("[",i,",",value,"], ", sep=""), sep="")
-				
-				if (yMax < (sum / windowSize)){
-					yMax = (sum / windowSize)
-				}
-			}#NA if end
-		
-
-	}#for end
-
-		if (title!="CHISQ" & title!="UNIFORM_CHISQ") {
-			xMax = length(addedValues)
-
-			location = paste(folder,"/",title, sep="")
-
-			jsArray = paste(jsArray, "]", sep="")
-			fileConn<-file(paste(location,"_mean.txt", sep=""))
-			writeLines(jsArray, fileConn)
-			close(fileConn)
-			
-			#-----------------------
-			#Mean
-			#----------------------
-			mean = mean(addedValues, na.rm=TRUE) 
-			addedValuesSD = sd(addedValues, na.rm=TRUE)
-			
-			writeToFile = c(mean, addedValuesSD)
-			location = paste(folder,"/",title, sep="")
-			fileConn = file(paste(location,"_arithmeticMean_ofAverage.txt", sep=""))
-				write(writeToFile, fileConn)
-			close(fileConn)
-		}
-		
-
-		#-----------------------
-		#For highcharts
-		#----------------------
-
-		addedValues <- sapply(addedValues, as.numeric)
-		#data into one table
-		if (is.null(rStatistics_sliding_window )){
-			if (title!="CHISQ" & title!="UNIFORM_CHISQ") {
-				rStatistics_sliding_window<<-addedValues
-			} 
-		}
-		else{
-			
-			if(title!="CHISQ" & title!="UNIFORM_CHISQ"){
-				rStatistics_sliding_window <<- cbind(rStatistics_sliding_window,addedValues) # also in createPlotChisq
-			}
-		}
-	
-}
+createSinglePositionChartData <- function(singlePositionValues,pos1,pos2,pos3,metric){
+  #File location
+  resultFile = paste(folder,"/",metric,".txt", sep="")
   
+  #Write table to file
+  write.table(values,file = resultFile, row.names = FALSE, col.names = FALSE, sep="\t")	
+
+  values <- sapply(values, as.numeric)
+  if (is.null(rStatistics)){
+    rStatistics<<-values
+  }
+  else{
+    rStatistics <<- cbind(rStatistics,values)
+  }
+  #-----------------------
+  #For highcharts
+  #----------------------
+  jsArray1 = "["
+  jsArray2 = "["
+  jsArray3 = "["
+  
+  for (i in 1:codonAlignmentLength ) {
+    if (metric=="CHISQ" || metric=="UNIFORM_CHISQ") {
+      
+      pvalue = values[i]
+      if(!is.na(pvalue) && pvalue == 0){pvalue = 1e-50}
+      val = (-1)*log10(pvalue)
+      if(!is.na(val) && val == "Inf"){val = 1e-300}
+    }else {
+      val = values[i]
+    }
+    
+    if (!is.na(val) && !is.null(val)){
+      val = as.double(val)
+      val = round(val, digits = 3)
+      if( i%%3 ==1 ){
+        jsArray1 = paste(jsArray1, paste("[",i,",", val,"], ", sep=""), sep="")
+      }
+      else if( i%%3 == 2 ){
+        jsArray2 = paste(jsArray2, paste("[",i,",", val,"], ", sep=""), sep="")
+      }
+      else{
+        jsArray3 = paste(jsArray3, paste("[",i,",", val,"], ", sep=""), sep="")
+      }
+    }
+    
+  }
+  location = paste(folder,"/",metric, sep="")
+  jsArray1 = paste(jsArray1, "]", sep="")
+  fileConn<-file(paste(location,"_pos1_chart.txt",sep=""))
+  writeLines(jsArray1, fileConn)
+  close(fileConn)
+
+  jsArray2 = paste(jsArray2, "]", sep="")
+  fileConn<-file(paste(location,"_pos2_chart.txt",sep=""))
+  writeLines(jsArray2, fileConn)
+  close(fileConn)
+
+  jsArray3 = paste(jsArray3, "]", sep="")
+  fileConn<-file(paste(location,"_pos3_chart.txt",sep=""))
+  writeLines(jsArray3, fileConn)
+  close(fileConn)
+}
+
+createSlidingWindowChartData <- function(singlePositionValues,windowSize,codonPosition,metric){
+  slidingWindowValues = rep(NA,codonAlignmentLength)
+  jsArray = "["
+  for(i in seq(codonPosition, (length(values)-3*windowSize), by = 3)){
+    sum = 0
+    counter_PositionsInSum = 0
+    currentPosition = i
+    NAinWindow = FALSE
+   
+    for(k in seq(currentPosition, (length(values)-3*windowSize), by = 3)){
+      val = singlePositionValues[k]
+      gapRatio = observed[k,6]
+      if (gapRatio >= skipGap){next}
+      else if (is.na(val)){NAinWindow = TRUE;break}
+      else {
+        val = as.double(val)
+        sum = sum + val
+        counter_PositionsInSum = counter_PositionsInSum + 1
+        currentPosition = currentPosition + 3
+      }
+
+      if (counter_PositionsInSum == windowSize){
+          break
+      } else if (currentPosition >= length(values)-3){
+        NAinWindow = TRUE
+        break
+      }
+    }#Repeat END
+
+    if(!NAinWindow){
+      avg = sum / windowSize
+      slidingWindowValues[i] = (avg)
+      value = round(avg, digits = 3)
+      jsArray = paste(jsArray, paste("[",i,",",value,"], ", sep=""), sep="")
+    }#NA if end
+  
+
+}#for end
+
+  if (metric!="CHISQ" & metric!="UNIFORM_CHISQ") {
+    #Write sliding window values to file
+    location = paste(folder,"/",metric, sep="")
+    jsArray = paste(jsArray, "]", sep="")
+    fileConn<-file(paste(location,"_sliding_window_chart.txt", sep=""))
+    writeLines(jsArray, fileConn)
+    close(fileConn)
+  
+    mean = mean(slidingWindowValues, na.rm=TRUE) 
+    slidingWindowValuesSD = sd(slidingWindowValues, na.rm=TRUE)
+    writeToFile = c(mean, slidingWindowValuesSD)
+    location = paste(folder,"/",metric, sep="")
+    fileConn = file(paste(location,"_sliding_window_mean_and_standard_deviation.txt", sep=""))
+      write(writeToFile, fileConn)
+    close(fileConn)
+  }
+  
+
+  #-----------------------
+  #For highcharts
+  #----------------------
+
+  slidingWindowValues <- sapply(slidingWindowValues, as.numeric)
+  #data into one table
+  if (is.null(rStatistics_sliding_window )){
+    if (metric!="CHISQ" & metric!="UNIFORM_CHISQ") {
+      rStatistics_sliding_window<<-slidingWindowValues
+    } 
+  }
+  else{
+    
+    if(metric!="CHISQ" & metric!="UNIFORM_CHISQ"){
+      rStatistics_sliding_window <<- cbind(rStatistics_sliding_window,slidingWindowValues) # also in createChartDataChisq
+    }
+  }
 	
 }
 
@@ -307,7 +247,6 @@ calculateRMSD <- function(observed,predicted){
 	for(i in 1:predictedLength) {
 		dif = dif + (observed[i] - predicted[i])^2
 	}
-	print (dif)
 	val = sqrt(dif/predictedLength)
 	return (val);
 	
@@ -328,7 +267,6 @@ calculateMAXDIF <- function(observed,predicted){
 	
 }
 
-
 calculateCHISQ <- function(observed,predicted){
 
 	if(length(predicted)>1){
@@ -344,16 +282,19 @@ calculateCHISQ <- function(observed,predicted){
 }
 
 
+
+
+
 metrics = c("RMSD","UNIFORM_RMSD","MAXDIF","UNIFORM_MAXDIF","CHISQ","UNIFORM_CHISQ")
 
 for(metric in metrics){
 	#NA is generally interpreted as a missing value and has various forms - NA_integer_, NA_real_, etc
-	values = rep(NA,N)
-	pos1 = rep(NA,N)
-	pos2 = rep(NA,N)
-	pos3 = rep(NA,N)
+	values = rep(NA,codonAlignmentLength)
+	pos1 = rep(NA,codonAlignmentLength)
+	pos2 = rep(NA,codonAlignmentLength)
+	pos3 = rep(NA,codonAlignmentLength)
 	
-	for(i in 1:N) {
+	for(i in 1:codonAlignmentLength) {
 		if(observed[i,6] >= allowedGap){
 			values[i] = NA
 		}else{
@@ -361,7 +302,6 @@ for(metric in metrics){
 			observedCountOnePosition = as.numeric(observedCount[i,2:5])
 
 			#-----------------BEGIN RMSD & MAXDIF-------------------------
-	
 			if (metric == "UNIFORM_RMSD" || metric == "UNIFORM_MAXDIF" || metric == "UNIFORM_CHISQ"){
 				predictedOnePosition = as.numeric(predictedUniform[i,2:5]) # predicted values, uniform codon usage
 			} else {
@@ -379,8 +319,6 @@ for(metric in metrics){
 					p[length(p)+1] = predictedOnePosition[j]
 				} 
 			}
-			
-
 
 			if (metric == "RMSD" || metric == "UNIFORM_RMSD") {
 				val = calculateRMSD(x,p)
@@ -409,20 +347,18 @@ for(metric in metrics){
 		}
 	}
 	
-	createPlot(values,pos1,pos2,pos3, metric,mode)
+	createSinglePositionChartData(values,pos1,pos2,pos3, metric)
+  createSlidingWindowChartData(values,windowSize,codonPosition,metric)
 }
 
 
 
 #------------------------------REAL Pearson's Chi-squared Test for Count Data for sliding window mode------------------------------
-#
-
-
 #pos	 A 	 C 	 G 	 T 	ctrl	gap
 #10	0.3333	0.5385	0.0769	0.0513	1.0	0.2041
-chisqTestValues = rep(NA,N)
+chisqTestValues = rep(NA,codonAlignmentLength)
 
-for(i in seq(codonPosition, (length(chisqTestValues)-3*windowSize), by = 3)){
+for(i in seq(codonPosition, (codonAlignmentLength-3*windowSize), by = 3)){
 	if(observed[i,6] >= allowedGap){
 		chisqTestValues[i] = NA
 	}else{
@@ -437,7 +373,6 @@ for(i in seq(codonPosition, (length(chisqTestValues)-3*windowSize), by = 3)){
 				p[length(p)+1] = as.double(predicted[i,j])
 		  }
 		}
-		
 		
 		count = 1
 		isEnd = TRUE #If skipping reaches to the end of the MSA
@@ -455,6 +390,8 @@ for(i in seq(codonPosition, (length(chisqTestValues)-3*windowSize), by = 3)){
 				count = count + 1
 			}
 		}
+
+
 		if(isEnd){
 			break # p-value is not calculated
 		}else{
@@ -484,7 +421,7 @@ for(i in seq(codonPosition, (length(chisqTestValues)-3*windowSize), by = 3)){
 	}
 }
 
-createPlotChisq(chisqTestValues,"CHISQ")
+createChartDataChisq(chisqTestValues,"CHISQ")
 
 colnames(rStatistics) <- c("MSA_pos","RMSD","RMSD(uniform codon usage)","MAXDIF","MAXDIF(uniform codon usage)","CHISQ p-value","CHISQ p-value (uniform codon usage)")
 dataName = paste(folder,"/raw_values.tsv", sep="")

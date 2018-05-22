@@ -112,10 +112,9 @@ cRegions algorithm uses three different metrics to compare observed and predicte
 
 Usage: <br>
 ```
-Rscript msaStatistics.R [mode] [allowed gap] [skip gap] [window size] [codon position] [input/output dir] observed.tsv proportion_observed.tsv weighted_predicted_uniform.tsv weighted_predicted.tsv codon_usage_bias.tsv
+Rscript msaStatistics.R [allowed gap] [skip gap] [window size] [codon position] [input/output dir] observed.tsv proportion_observed.tsv weighted_predicted_uniform.tsv weighted_predicted.tsv codon_usage_bias.tsv
 ```
 Options:<br>
-<b>mode - </b> 1 - Single positions; 2 - sliding window mode; 3 both (web tool uses mode 3)<br>
 <b>allowed gap - </b> how many gaps (percentage) are allowed in a single column in the codon alignment, default 20 <br>
 <b>skip gap - </b> when a position in the sliding window mode in the codon aligment has more than 'skip gap' (percentage), then this position is excluded from the window and the next one is included , default 90 ( applicable when window size > 1 ) <br>
 <b>window size - </b> windows size in the sliding window mode, default 1<br>
