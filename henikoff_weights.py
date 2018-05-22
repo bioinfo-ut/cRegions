@@ -84,7 +84,7 @@ def calculateHenikoffWeights(sequences):
 			codon = codon.lower()
 			r = len(codons) #r is the number of different residues in the position a
 			s = codons.get(codon) #s is the number of times the particular residue appears in the position.
-			weight = 1/(r*s)
+			weight = 1.0/(r*s)
 			weights[i][1] += weight
 	
 	return weights
@@ -118,7 +118,7 @@ def calculateHenikoffWeightsSingleNucleotide(sequences):
 			nucleotide = nucleotide.lower()
 			r = len(nucleotides) #r is the number of different residues in the position a
 			s = nucleotides.get(nucleotide) #s is the number of times the particular residue appears in the position.
-			weight = 1/(r*s)
+			weight = 1.0/(r*s)
 			weights[i][1] += weight
 	return weights
 
