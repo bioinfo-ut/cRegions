@@ -98,6 +98,9 @@ Output:<br>
 <code>codon_usage_table.txt</code> - Codon usage table, can be used as an input in the msaPositionReader.py script or in the cRegions webpage.<br>
 <code>codon_usage_bias.tsv</code> -  Codon usage bias tsv file. Additional information about the number of sequences and the length of the MSA is provided from which the codon usage was calculated.<br>
 <code>codonUsageScript.txt</code> - A file used as an input for highcharts plots.<br>
+<code>adjusted_codon_usage_table.txt</code> - Codon usage table which is adjusted by sequence weights. <br>
+<code>adjusted_codon_usage_bias.tsv</code> -  Codon usage bias tsv file which is adjusted by sequence weights<br>
+<code>adjusted_codonUsageScript.txt</code> - A file used as an input for highcharts plots.<br>
 <br>
 <br>
 
