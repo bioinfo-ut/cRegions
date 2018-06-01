@@ -447,14 +447,20 @@ def dictClearValues(d):
 	for key, value in arr:
 		value[-1] = 0
 
-def fillCodonCounts(codonAlignment,codonCounts):
+def fillCodonCounts(codonAlignment,codonCounts,weights):
 
 	
 	for a in range(0, len(codonAlignment)):
 
 		sequence = codonAlignment[a][1]
+		name = codonAlignment[a][0]
 		seqLength = len(sequence) #sequence length of the first sequence or total alignment
 		codon = ""
+		weight = 1
+		if (weights):
+			weightResult = weights.get(name)
+			if(weightResult is not None):
+					weight = float(weightResult)
 		
 		for i in range(0,seqLength):
 			nucleotide_removeCR = (sequence[i]).split(chr(13))[0]
@@ -465,7 +471,7 @@ def fillCodonCounts(codonAlignment,codonCounts):
 			if (len(codon) == 3):
 				codonCount = codonCounts.get(codon)
 				if (codonCount is not None):
-					codonCount[-1] += 1 #'ttt':['PHE', 0] => 'ttt': ['PHE', 1]
+						codonCount[-1] += weight #'ttt':['PHE', 0] => 'ttt': ['PHE', 1]
 				codon = ""
 				
 
@@ -548,7 +554,10 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 	dataFileScript.write("[")
 	AminoAcidsInArray = []
 	dataFile.write("number_of_seq:"+str(len(codonAlignment)) +"\t msa_length:" + msaLength +"\t" +"\n")
-	dataFile.write("codon"+ "\t" + "AA" +"\t" +"\t" + "freq" +"\t" + "prop" +"\n")
+	if (tag == "adjusted_"):
+		dataFile.write("codon"+ "\t" + "AA" +"\t" +"\t" + "total_weight" +"\t" + "prop" +"\n")
+	else:
+		dataFile.write("codon"+ "\t" + "AA" +"\t" +"\t" + "freq" +"\t" + "prop" +"\n")
 	for i in range(0, len(codonUsageBiasList)):
 		codon = codonUsageBiasList[i][0]
 		aminoacid = codonUsageBiasList[i][1]
@@ -584,10 +593,10 @@ def createDataFileCodonUsage(filePath, codonUsageBiasList, tag):
 	dataFileScript.close()
 	dataFile.close()
 	
-def createCodonUsageFrequenceTable(filePath, codonUsageBiasList):
+def createCodonUsageFrequenceTable(filePath, codonUsageBiasList, tag):
 
 	try:
-		dataFileUser = open(filePath + "codon_usage_table.txt", "w")
+		dataFileUser = open(filePath + tag + "codon_usage_table.txt", "w")
 	except:
 		print ("ERROR - Creating " + str(filePath))
 
@@ -675,7 +684,7 @@ def findObsPosition(filePath, fileName, codonAlignment):
 
 def createAminoAcidDict(codonUsageBias):
 
-	dict = {} #ARG:{'a':0.0,'c':0.0,'g':0.0,'t':0.0}
+	dict = {}
 
 	if sys.version_info[0] < 3:
 		arr = codonUsageBias.iteritems()
@@ -688,13 +697,11 @@ def createAminoAcidDict(codonUsageBias):
 		prop = val[-1]
 		aa = dict.get(aminoAcid)
 		
-		#if (codon[:2] == 'tc' and aminoAcid == 'SER'):
-			#aminoAcid == "SER_TCN"
-		
 		if (aa is None):
 			dict[aminoAcid] = { 0:{'a':0.0,'c':0.0,'g':0.0,'t':0.0},
-								1:{'a':0.0,'c':0.0,'g':0.0,'t':0.0},
-								2:{'a':0.0,'c':0.0,'g':0.0,'t':0.0}}
+													1:{'a':0.0,'c':0.0,'g':0.0,'t':0.0},
+													2:{'a':0.0,'c':0.0,'g':0.0,'t':0.0}}
+
 			dict[aminoAcid][0][codon[0]] = prop
 			dict[aminoAcid][1][codon[1]] = prop
 			dict[aminoAcid][2][codon[2]] = prop
@@ -705,69 +712,206 @@ def createAminoAcidDict(codonUsageBias):
 			
 
 	return dict
-	
+
+def normalizeSelectedWeights (dictionary, totalProp):
+	#input = {'a': 5.5, 'c': 14.0, 't': 0.1, 'g': 0.125} 
+	if sys.version_info[0] < 3:
+		arr = dictionary.iteritems()
+	else:
+		arr = dictionary.items()
+
+	total = 0
+	for nuc, prop in arr:
+		if ( prop > 1):
+			total += prop - 1
 
 
+	if sys.version_info[0] < 3:
+		arr = dictionary.iteritems()
+	else:
+		arr = dictionary.items()
+
+	for nuc, prop in arr:
+		if (total > 0 and prop > 1):
+			dictionary[nuc] = round((prop-1)/total,4) * totalProp
+
+	return dictionary
+
+def normalizeWeights (dictionary):
+	#input = {'a': 5.5, 'c': 14.0, 't': 2.5, 'g': 0.0} 
+	total = sum(dictionary.values(),0.0)
+
+	if sys.version_info[0] < 3:
+		arr = dictionary.iteritems()
+	else:
+		arr = dictionary.items()
+
+	for nuc, prop in arr:
+		if (total > 0):
+			dictionary[nuc] = round(prop/total,4)
+		else:
+			dictionary[nuc] = 0
+	return dictionary
+
+'''
+prediction = {'a': 0.5, 'c': 0, 't': 0.5, 'g': 0.0} Based on all positions
+observed = {'a': 0.28, 'c': 0, 't': 0.72, 'g': 0.0} Due to similar sequences
+weighted / adjusted predicted should be something = ~ {'a': 0.3, 'c': 0, 't': 0.7, 'g': 0.0}
+'''
 def calculatePredictedValues(codonAlignment,codonUsageBias,aaDictionary,weights):
 	
-	result = {} #  a:0.023,c:0.2...
+	predictions = {} #  a:0.023,c:0.2...
+	nucWeights = {} #  a:0.023,c:0.2...
+	totalSeqInMsa = len(codonAlignment) #Length of one sequence
+	defaultWeight = 1.0/totalSeqInMsa
 	msaLength = len(codonAlignment[0][1]) #Length of one sequence
+	count = -1
 
 	for i in range(0,msaLength,3):
-		result[i] = {'a':0.0,'c':0.0,'g':0.0,'t':0.0}
-		result[i+1] = {'a':0.0,'c':0.0,'g':0.0,'t':0.0}
-		result[i+2] = {'a':0.0,'c':0.0,'g':0.0,'t':0.0}
+		for k in range(0,3):
+			predictions[i+k] = {'a':0.0,'c':0.0,'g':0.0,'t':0.0}
+			nucWeights[i+k]   = {'a':{'count':0, 'weight':0.0},'c':{'count':0, 'weight':0.0},'g':{'count':0, 'weight':0.0},'t':{'count':0, 'weight':0.0}} 
+
+		'''
+		# ---------- FOR DEBUGGING TODO: Remove-----------
+		count +=1
+		showPosition = 21
+		# ---------- FOR DEBUGGING TODO: Remove-----------
+		'''
 
 		for j in range(0,len(codonAlignment)):
 			name = codonAlignment[j][0]
 			seq = codonAlignment[j][1]
-			p1 = seq[i]
-			p2 = seq[i + 1]
-			p3 = seq[i + 2]
-			codon = p1 + p2 + p3
-			
-			aminoAcid = codonUsageBias.get(codon)
-			
-			if (codon != '---' and aminoAcid is not None):
-				aminoAcid = aminoAcid[0]
-				propForCodonEachPos = aaDictionary.get(aminoAcid)
-				p_prop = []
-				p_prop.append(propForCodonEachPos[0])
-				p_prop.append(propForCodonEachPos[1])
-				p_prop.append(propForCodonEachPos[2])
-				
-				weight = 1
-				if(weights):
-					weight = weights.get(name)
-					if(weight is not None):
-						weight = float(weight)
-				
-				for k in range(0,3):
-					result[i+k]['a'] += p_prop[k]['a'] * weight
-					result[i+k]['c'] += p_prop[k]['c'] * weight
-					result[i+k]['g'] += p_prop[k]['g'] * weight
-					result[i+k]['t'] += p_prop[k]['t'] * weight
+			codon = seq[i] + seq[i + 1] + seq[i + 2]
 
-	#normalize
-	if sys.version_info[0] < 3:
-		arr = result.iteritems()
-	else:
-		arr = result.items()
+			codonResult = codonUsageBias.get(codon) #  gta: ['VAL', 'V', 600, 0.35377358490566035] 
+			if (codon != '---' and codonResult is not None):
+				aminoAcid = codonResult[0]
+				propForCodonEachPos = aaDictionary.get(aminoAcid) # VAL': {0: {'a': 0.0, 'c': 0.0, 't': 0.0, 'g': 1.0}, 1: {'a': 0.0, 'c': 0.0, 't': 1.0, 'g': 0.0}, 2: {'a': 0.38502358490566035, 'c': 0.047759433962264154, 't': 0.35377358490566035, 'g': 0.21344339622641509}}
+				p_prop = [] # nucleotide probabilites for current amino acid for each position in the codon
+				p_prop.append(propForCodonEachPos[0]) # {'a': 0.0, 'c': 0.0, 't': 0.0, 'g': 1.0}
+				p_prop.append(propForCodonEachPos[1]) # {'a': 0.0, 'c': 0.0, 't': 1.0, 'g': 0.0}
+				p_prop.append(propForCodonEachPos[2]) # {'a': 0.385, 'c': 0.0478, 't': 0.354, 'g': 0.213}
+
+				'''
+				# ---------- FOR DEBUGGING TODO: Remove-----------
+				if (weights and count == showPosition):
+					print("<br>")
+					print (name)
+					print (aminoAcid)
+					print (codon)
+					print("Predicted for 3rd pos :  ")
+					print (p_prop[-1])
+					print("<br>")
+				# ---------- FOR DEBUGGING TODO: Remove-----------
+				'''
+
+				for k in range(0,3): # 0 1 2
+					weight = defaultWeight
+					if(weights):
+						weightResult = weights.get(name)
+						if(weightResult is not None):
+							weight = float(weightResult)
+						else:
+							print('ERROR - No weight found')
+
+					currentNucleotide = codon[k]
+					nucWeights[i+k][currentNucleotide]['count'] += 1
+					nucWeights[i+k][currentNucleotide]['weight'] += weight
+					currentNucleotide = codon[k]
+					for x in ['a','c','g','t']:
+						predictions[i+k][x] += p_prop[k][x]
 		
-	for position, value in arr:
-		total = sum(value.values(),0.0)
-		if sys.version_info[0] < 3:
-			values = value.iteritems()
-		else:
-			values = value.items()
-		for nuc, prop in values:
-			if (total > 0):
-				value[nuc] = round(prop/total,4)
-			else:
-				value[nuc] = 0
+		#Normalize predictions
+		for k in range(0,3):
+			predictions[i+k] = normalizeWeights(predictions[i+k])
+		
+		
+		'''
+		# ---------- FOR DEBUGGING TODO: Remove-----------
+		if (weights and count == showPosition):
 			
+			print("<br>predictions:<br>")
+			print(predictions[i])
+			print("<br>")
+			print(predictions[i+1])
+			print("<br>")
+			print(predictions[i+2])
+			print("<br>")
+			print("<br>nucWeights:<br>")
+			print(nucWeights[i])
+			print("<br>")
+			print(nucWeights[i+1])
+			print("<br>")
+			print(nucWeights[i+2])
+			print("<br>")
+		# ---------- FOR DEBUGGING TODO: Remove-----------
+		'''
 
-	return result
+
+		if(weights):
+			for k in range(0,3):
+				difNucleotideCounter = 0
+				difNucleotideTotal = 0
+				totalProp = 0
+				for x in ['a','c','g','t']:
+					nucCount = nucWeights[i+k][x]['count']
+					if (nucCount > 0):
+						difNucleotideCounter += 1
+						difNucleotideTotal += nucCount
+						'''
+						#Total proportion that should be divided based on weights. (It is important in cases when a nucleotide is not observed but has prob > 0)
+						prediction  {'a': 0.385, 'c': 0.0478, 't': 0.354, 'g': 0.213}
+						observed  {'a': 6, 'c': 0, 't': 5, 'g': 3}
+						average weights  {'a': 0.3, 'c': 0.1, 't': 0.3, 'g': 0.3}
+						totalProp = 0.385 + 0.354 + 0.213 = 0.952
+						adjusted values  {'a': 0.385 x 1/0.3 = 1.28 , 't': 0.354 x 1/0.3 = 1.18, 'g': 0.213 x 1/0.3 = 0.71}
+						total adjusted = 1.28 + 1.18 + 0.71 = 3.17
+						weighted predictions {'a': 1.28 / 3.17 x 0.952 = 0.384 , 'c': 0.0478, 't': 1.18 / 3.17 x 0.952 ...}
+						'''
+
+						totalProp += predictions[i+k][x] 
+
+				for x in ['a','c','g','t']:
+					nucCount = nucWeights[i+k][x]['count']
+
+					# Weighting enabled only if there is at least two different nucleotides in a column
+					if (nucCount > 0 and difNucleotideCounter > 1):
+						avgWeight = nucWeights[i+k][x]['weight'] / nucCount
+						
+						
+						'''
+						# ---------- FOR DEBUGGING TODO: Remove-----------
+						if (weights and count == showPosition):
+							print (x + " avgWeight : " + str(avgWeight) + "<br>")
+							print (str(predictions[i+k][x] * 1/avgWeight) + "<br>")
+						# ---------- FOR DEBUGGING TODO: Remove-----------
+						'''
+
+
+						predictions[i+k][x] = predictions[i+k][x] * 1/avgWeight + 1 # +1 for detecting nucleotides that where weighted in normalizeSelecteWeights
+
+	
+				predictions[i+k] = normalizeSelectedWeights(predictions[i+k],totalProp)
+		
+		
+		'''
+		# ---------- FOR DEBUGGING TODO: Remove-----------
+		if (weights and count == showPosition):
+
+			print("<br>adjusted predictions:<br>")
+			print(predictions[i])
+			print("<br>")
+			print(predictions[i+1])
+			print("<br>")
+			print(predictions[i+2])
+			print("<br>")
+		# ---------- FOR DEBUGGING TODO: Remove-----------
+		'''
+
+
+	return predictions
+
 def createDataFile(filePath, predicted):
 
 	try:
@@ -1011,13 +1155,27 @@ if __name__ == '__main__':
 	
 	#Calculate codon usage
 	dictClearValues(codonCounts)
-	fillCodonCounts(codonAlignment,codonCounts)
+	fillCodonCounts(codonAlignment,codonCounts,False)
 	codonUsageProportion = calculateCodonUsageBias(codonCounts)
+	
 
 	#Create codonUsage file and file for highcharts
 	codonUsageList = codonUsageBiasToSortedList(codonUsageProportion)
 	createDataFileCodonUsage(outputFolder,codonUsageList,"")
-	createCodonUsageFrequenceTable(outputFolder,codonUsageList)
+	createCodonUsageFrequenceTable(outputFolder,codonUsageList, "")
+
+
+	#Calclulate adjusted codon usage
+	if ( weights ):
+		dictClearValues(codonCounts)
+		fillCodonCounts(codonAlignment,codonCounts,weights)
+		codonUsageProportionAdjusted = calculateCodonUsageBias(codonCounts)
+
+		#Create codonUsage file and file for highcharts
+		codonUsageListAdjusted = codonUsageBiasToSortedList(codonUsageProportionAdjusted)
+		createDataFileCodonUsage(outputFolder,codonUsageListAdjusted,"adjusted_")
+		createCodonUsageFrequenceTable(outputFolder,codonUsageListAdjusted, "adjusted_")
+		
 	
 
 	if (isUserCodonTable):
@@ -1048,5 +1206,5 @@ if __name__ == '__main__':
 	createDataFile(outputFolder + "predicted.tsv", predicted)
 	
 	if ( weights ):
-		predicted_weighted = calculatePredictedValues(codonAlignment,codonUsageProportion,aminoAcidDict,weights)
+		predicted_weighted = calculatePredictedValues(codonAlignment,codonUsageProportionAdjusted,aminoAcidDict,weights)
 		createDataFile(outputFolder + "weighted_predicted.tsv", predicted_weighted)
