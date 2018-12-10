@@ -1,6 +1,9 @@
 # Created by Mikk Puustusmaa
 # Last edit on 17.04.2018
 
+#Supress warnings
+options(warn=-1)
+
 #------------------------------SETTINGS-------------------------------------
 args <- commandArgs(TRUE)
 
@@ -21,13 +24,16 @@ windowSize = as.numeric(args[3])
 # E.g. if codonPosition = 3 and window size = 3, then arithmetic mean is calculated over 3,6,9 etc.
 codonPosition = as.numeric(args[4])
 
+# Identity exponent
+identity_exponent = as.numeric(args[5])
+
 #location of data
-folder = args[5]
-observedDataFile = toString(args[6]) #count data
-observedProportionDataFile = toString(args[7]) #observed nucleotide proportions 
-predictedUniformFile = toString(args[8]) #weighted or normal
-predictedFile = toString(args[9]) #weighted or normal
-codonUsageFile = toString(args[10])
+folder = args[6]
+observedDataFile = toString(args[7]) #count data
+observedProportionDataFile = toString(args[8]) #observed nucleotide proportions 
+predictedUniformFile = toString(args[9]) #weighted or normal
+predictedFile = toString(args[10]) #weighted or normal
+codonUsageFile = toString(args[11])
 
 
 #------------------------------SETTINGS END--------------------------------
@@ -59,6 +65,36 @@ numberSeq <- as.numeric(numberSeqArr[2])
 
 #Total length of MSA including gaps
 codonAlignmentLength = length(observed$pos)
+
+
+# Pairwise codon alignment similarity
+library('seqinr')
+myseqs <- read.alignment(file = paste(folder, "/", 'pal2nal.fasta', sep=""), format = "fasta")
+identity_matrix <- as.matrix(dist.alignment(myseqs, matrix = "identity" ))
+diag(identity_matrix) = NA
+identity_matrix <- (1-identity_matrix^2)
+avg_identity <- mean(identity_matrix, na.rm = TRUE)
+
+# Pairwise protein alignment similarity
+myseqs <- read.alignment(file = paste(folder, "/", 'proteinalignment.fasta', sep=""), format = "fasta")
+identity_matrix <- as.matrix(dist.alignment(myseqs, matrix = "identity" ))
+diag(identity_matrix) = NA
+identity_matrix <- (1-identity_matrix^2)
+avg_protein_identity <- mean(identity_matrix, na.rm = TRUE)
+
+#nucleotide identity is used
+identity = avg_identity
+if (identity_exponent == 0 || identity==0) {
+  coefficient = 0
+} else {
+  coefficient = identity^identity_exponent
+}
+
+#Returns identity
+print(paste(avg_identity,avg_protein_identity, sep=" "))
+
+#write file
+write(paste(avg_identity,avg_protein_identity, sep="\t"), file = paste(folder, "/", 'identity.txt', sep=""))
 
 
 colorPos1 = "blue"
@@ -244,6 +280,9 @@ calculateRMSD <- function(observed,predicted){
 	val = NA
 	dif = 0
 	predictedLength <- length(predicted)
+  predicted = predicted + coefficient*(observed/sum(observed))
+  predicted = predicted/sum(predicted)
+
 	for(i in 1:predictedLength) {
 		dif = dif + (observed[i] - predicted[i])^2
 	}
@@ -257,6 +296,9 @@ calculateMAXDIF <- function(observed,predicted){
 	val = NA
 	v = c()
 	predictedLength <- length(predicted)
+  predicted = predicted + coefficient*(observed/sum(observed))
+  predicted = predicted/sum(predicted)
+
 	for(i in 1:predictedLength) {
 		dif = abs(observed[i] - predicted[i])
 		v = c(v,dif)
@@ -269,7 +311,11 @@ calculateMAXDIF <- function(observed,predicted){
 
 calculateCHISQ <- function(observed,predicted){
 
+  predicted = predicted + coefficient*(observed/sum(observed))
+  predicted = predicted/sum(predicted)
+
 	if(length(predicted)>1){
+    
 		test = chisq.test(observed,p = predicted, rescale.p=TRUE)
 		pvalue = test$p.value
 		val = pvalue
@@ -410,6 +456,9 @@ for(i in seq(codonPosition, (codonAlignmentLength-3*windowSize), by = 3)){
 			}
 
 			if(length(x)>1){
+        p = p + coefficient*(x/sum(x))
+        p = p/sum(p)
+
 			  test = chisq.test(x,p = p, rescale.p=TRUE)
 			  pvalue = test$p.value
 			  chisqTestValues[i] = pvalue
